@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: atlasrh
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/atlasrh}
+    username: ${DB_USER:atlasrh}
+    password: ${DB_PASSWORD:atlasrh}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate   # le schéma est géré par Liquibase, Hibernate vérifie seulement
+    open-in-view: false
+    show-sql: false
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+server:
+  port: 8080
+
+logging:
+  level:
+    ma.atlasrh: DEBUG
