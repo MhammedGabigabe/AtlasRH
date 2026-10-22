@@ -1,0 +1,118 @@
+databaseChangeLog:
+
+  # ---------------------------------------------------------------
+  # Données de démonstration : départements
+  # ---------------------------------------------------------------
+  - changeSet:
+      id: 002-01-insert-departments
+      author: gabi
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO department (name, description) VALUES
+                ('Ressources Humaines', 'Gestion du personnel, du recrutement et des carrières.'),
+                ('Informatique', 'Développement, infrastructure et support informatique.'),
+                ('Finance', 'Comptabilité, budget et contrôle de gestion.');
+
+  # ---------------------------------------------------------------
+  # Données de démonstration : managers (sans manager)
+  # ---------------------------------------------------------------
+  - changeSet:
+      id: 002-02-insert-managers
+      author: gabi
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO employee (matricule, last_name, first_name, email, position, hire_date, department_id, manager_id) VALUES
+                ('EMP001', 'El Amrani', 'Yassine', 'yassine.elamrani@atlasrh.ma', 'Directeur des Ressources Humaines',
+                 DATE '2018-03-01', (SELECT id FROM department WHERE name = 'Ressources Humaines'), NULL),
+                ('EMP002', 'Benali', 'Salma', 'salma.benali@atlasrh.ma', 'Directrice Informatique',
+                 DATE '2018-06-15', (SELECT id FROM department WHERE name = 'Informatique'), NULL),
+                ('EMP003', 'Tazi', 'Karim', 'karim.tazi@atlasrh.ma', 'Directeur Financier',
+                 DATE '2019-01-10', (SELECT id FROM department WHERE name = 'Finance'), NULL);
+
+  # ---------------------------------------------------------------
+  # Données de démonstration : employés rattachés à un manager
+  # ---------------------------------------------------------------
+  - changeSet:
+      id: 002-03-insert-employees
+      author: gabi
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO employee (matricule, last_name, first_name, email, position, hire_date, department_id, manager_id) VALUES
+                ('EMP004', 'Chraibi', 'Nadia', 'nadia.chraibi@atlasrh.ma', 'Chargée de recrutement',
+                 DATE '2020-02-01', (SELECT id FROM department WHERE name = 'Ressources Humaines'),
+                 (SELECT id FROM employee WHERE matricule = 'EMP001')),
+                ('EMP005', 'Idrissi', 'Omar', 'omar.idrissi@atlasrh.ma', 'Gestionnaire de paie',
+                 DATE '2022-09-01', (SELECT id FROM department WHERE name = 'Ressources Humaines'),
+                 (SELECT id FROM employee WHERE matricule = 'EMP001')),
+                ('EMP006', 'Fassi', 'Leila', 'leila.fassi@atlasrh.ma', 'Développeuse Java',
+                 DATE '2021-04-12', (SELECT id FROM department WHERE name = 'Informatique'),
+                 (SELECT id FROM employee WHERE matricule = 'EMP002')),
+                ('EMP007', 'Ouazzani', 'Mehdi', 'mehdi.ouazzani@atlasrh.ma', 'Administrateur système',
+                 DATE '2023-10-02', (SELECT id FROM department WHERE name = 'Informatique'),
+                 (SELECT id FROM employee WHERE matricule = 'EMP002')),
+                ('EMP008', 'Berrada', 'Sara', 'sara.berrada@atlasrh.ma', 'Stagiaire comptabilité',
+                 DATE '2026-09-01', (SELECT id FROM department WHERE name = 'Finance'),
+                 (SELECT id FROM employee WHERE matricule = 'EMP003'));
+
+  # ---------------------------------------------------------------
+  # Données de démonstration : contrats
+  # EMP004 illustre un historique CDD TERMINE puis CDI EN_COURS.
+  # EMP008 illustre un STAGE EN_COURS avec date de fin.
+  # ---------------------------------------------------------------
+  - changeSet:
+      id: 002-04-insert-contracts
+      author: gabi
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO contract (type, start_date, end_date, gross_salary, status, employee_id)
+              SELECT 'CDI', DATE '2018-03-01', NULL, 48000.00, 'EN_COURS', id
+              FROM employee WHERE matricule = 'EMP001';
+
+              INSERT INTO contract (type, start_date, end_date, gross_salary, status, employee_id)
+              SELECT 'CDI', DATE '2018-06-15', NULL, 45000.00, 'EN_COURS', id
+              FROM employee WHERE matricule = 'EMP002';
+
+              INSERT INTO contract (type, start_date, end_date, gross_salary, status, employee_id)
+              SELECT 'CDI', DATE '2019-01-10', NULL, 46000.00, 'EN_COURS', id
+              FROM employee WHERE matricule = 'EMP003';
+
+              INSERT INTO contract (type, start_date, end_date, gross_salary, status, employee_id)
+              SELECT 'CDD', DATE '2020-02-01', DATE '2021-12-31', 18000.00, 'TERMINE', id
+              FROM employee WHERE matricule = 'EMP004';
+
+              INSERT INTO contract (type, start_date, end_date, gross_salary, status, employee_id)
+              SELECT 'CDI', DATE '2022-01-01', NULL, 26000.00, 'EN_COURS', id
+              FROM employee WHERE matricule = 'EMP004';
+
+              INSERT INTO contract (type, start_date, end_date, gross_salary, status, employee_id)
+              SELECT 'CDI', DATE '2022-09-01', NULL, 22000.00, 'EN_COURS', id
+              FROM employee WHERE matricule = 'EMP005';
+
+              INSERT INTO contract (type, start_date, end_date, gross_salary, status, employee_id)
+              SELECT 'CDI', DATE '2021-04-12', NULL, 25000.00, 'EN_COURS', id
+              FROM employee WHERE matricule = 'EMP006';
+
+              INSERT INTO contract (type, start_date, end_date, gross_salary, status, employee_id)
+              SELECT 'CDI', DATE '2023-10-02', NULL, 24000.00, 'EN_COURS', id
+              FROM employee WHERE matricule = 'EMP007';
+
+              INSERT INTO contract (type, start_date, end_date, gross_salary, status, employee_id)
+              SELECT 'STAGE', DATE '2026-09-01', DATE '2027-02-28', 3000.00, 'EN_COURS', id
+              FROM employee WHERE matricule = 'EMP008';
+
+  # ---------------------------------------------------------------
+  # Données de démonstration : types de congé
+  # ---------------------------------------------------------------
+  - changeSet:
+      id: 002-05-insert-leave-types
+      author: gabi
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO leave_type (name, days_per_year) VALUES
+                ('ANNUEL', 18),
+                ('EXCEPTIONNEL', 3);
