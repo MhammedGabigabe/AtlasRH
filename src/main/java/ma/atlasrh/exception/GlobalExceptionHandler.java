@@ -1,10 +1,11 @@
 package ma.atlasrh.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.MissingRequestHeaderException;
+import org.hibernate.query.sqm.PathElementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -87,14 +89,14 @@ public class GlobalExceptionHandler {
         String message = "Le paramètre '" + ex.getName() + "' a une valeur invalide : " + ex.getValue();
         log.warn(message);
         return buildError(HttpStatus.BAD_REQUEST, message, request, null);
+    }
+
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ErrorResponse> handleMissingRequestHeader(MissingRequestHeaderException ex,
                                                                      HttpServletRequest request) {
-        String message = "L'en-t?te obligatoire '" + ex.getHeaderName() + "' est manquant.";
+        String message = "L'en-tête obligatoire '" + ex.getHeaderName() + "' est manquant.";
         log.warn(message);
         return buildError(HttpStatus.BAD_REQUEST, message, request, null);
-    }
-
     }
 
     @ExceptionHandler(PropertyReferenceException.class)
@@ -103,6 +105,31 @@ public class GlobalExceptionHandler {
         String message = "Le champ de tri '" + ex.getPropertyName() + "' n'existe pas.";
         log.warn(message);
         return buildError(HttpStatus.BAD_REQUEST, message, request, null);
+    }
+
+    @ExceptionHandler(InvalidDataAccessApiUsageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidDataAccessApiUsage(InvalidDataAccessApiUsageException ex,
+                                                                         HttpServletRequest request) {
+        // Hibernate 7 signale un attribut de tri inconnu via PathElementException
+        // (et non plus PropertyReferenceException comme avec les versions précédentes).
+        Throwable cause = ex;
+        while (cause != null && !(cause instanceof PathElementException)) {
+            cause = cause.getCause();
+        }
+        if (cause != null) {
+            String message = "Le champ de tri demandé n'existe pas.";
+            String causeMessage = cause.getMessage();
+            if (causeMessage != null) {
+                int start = causeMessage.indexOf('\'');
+                int end = causeMessage.indexOf('\'', start + 1);
+                if (start >= 0 && end > start) {
+                    message = "Le champ de tri '" + causeMessage.substring(start + 1, end) + "' n'existe pas.";
+                }
+            }
+            log.warn(message);
+            return buildError(HttpStatus.BAD_REQUEST, message, request, null);
+        }
+        return handleUnexpectedException(ex, request);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
