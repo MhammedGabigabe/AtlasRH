@@ -1,6 +1,7 @@
 package ma.atlasrh.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -86,6 +87,14 @@ public class GlobalExceptionHandler {
         String message = "Le paramètre '" + ex.getName() + "' a une valeur invalide : " + ex.getValue();
         log.warn(message);
         return buildError(HttpStatus.BAD_REQUEST, message, request, null);
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestHeader(MissingRequestHeaderException ex,
+                                                                     HttpServletRequest request) {
+        String message = "L'en-t?te obligatoire '" + ex.getHeaderName() + "' est manquant.";
+        log.warn(message);
+        return buildError(HttpStatus.BAD_REQUEST, message, request, null);
+    }
+
     }
 
     @ExceptionHandler(PropertyReferenceException.class)
