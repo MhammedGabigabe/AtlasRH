@@ -98,6 +98,18 @@ public class LeaveRequestService {
         return requests.map(leaveRequestMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    public Page<LeaveRequestResponse> findPendingTeam(Long managerId, Pageable pageable) {
+        if (!employeeRepository.existsById(managerId)) {
+            throw new ResourceNotFoundException(
+                    "Manager introuvable avec l'id " + managerId + ".");
+        }
+
+        return leaveRequestRepository.findByTeamManagerIdAndStatus(
+                        managerId, LeaveRequestStatus.EN_ATTENTE, pageable)
+                .map(leaveRequestMapper::toResponse);
+    }
+
     @Transactional
     public LeaveRequestResponse cancel(Long employeeId, Long leaveRequestId) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(leaveRequestId)
