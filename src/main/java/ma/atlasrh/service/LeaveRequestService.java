@@ -98,6 +98,25 @@ public class LeaveRequestService {
         return requests.map(leaveRequestMapper::toResponse);
     }
 
+    @Transactional
+    public LeaveRequestResponse cancel(Long employeeId, Long leaveRequestId) {
+        LeaveRequest leaveRequest = leaveRequestRepository.findById(leaveRequestId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Demande de congé introuvable avec l'id " + leaveRequestId + "."));
+
+        if (!leaveRequest.getEmployee().getId().equals(employeeId)) {
+            throw new ConflictException("Seul le propriétaire de la demande peut l'annuler.");
+        }
+
+        if (leaveRequest.getStatus() != LeaveRequestStatus.EN_ATTENTE) {
+            throw new ConflictException(
+                    "La demande ne peut être annulée que lorsqu'elle est en attente.");
+        }
+
+        leaveRequest.setStatus(LeaveRequestStatus.ANNULEE);
+        return leaveRequestMapper.toResponse(leaveRequestRepository.save(leaveRequest));
+    }
+
     private int countBusinessDays(LocalDate startDate, LocalDate endDate) {
         int count = 0;
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
