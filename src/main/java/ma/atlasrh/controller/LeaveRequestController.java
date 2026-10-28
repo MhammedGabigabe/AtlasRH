@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,5 +53,14 @@ public class LeaveRequestController {
             @PageableDefault(size = 10, sort = "startDate", direction = Sort.Direction.DESC)
             Pageable pageable) {
         return leaveRequestService.findMine(employeeId, status, pageable);
+    }
+
+    @PatchMapping("/{id}/cancel")
+    @Operation(summary = "Annuler une demande de congé",
+            description = "Annule une demande appartenant à l'employé identifié par X-Employee-Id, uniquement si elle est EN_ATTENTE.")
+    public LeaveRequestResponse cancel(
+            @RequestHeader("X-Employee-Id") Long employeeId,
+            @PathVariable Long id) {
+        return leaveRequestService.cancel(employeeId, id);
     }
 }
