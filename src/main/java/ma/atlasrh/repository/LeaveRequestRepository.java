@@ -19,6 +19,15 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
                                                    LeaveRequestStatus status,
                                                    Pageable pageable);
 
+    @Query("""
+            SELECT r FROM LeaveRequest r
+            WHERE r.employee.manager.id = :managerId
+              AND r.status = :status
+            """)
+    Page<LeaveRequest> findByTeamManagerIdAndStatus(@Param("managerId") Long managerId,
+                                                     @Param("status") LeaveRequestStatus status,
+                                                     Pageable pageable);
+
     boolean existsByEmployeeIdAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
             Long employeeId, Collection<LeaveRequestStatus> statuses,
             LocalDate endDate, LocalDate startDate);
