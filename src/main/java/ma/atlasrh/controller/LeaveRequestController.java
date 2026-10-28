@@ -55,6 +55,16 @@ public class LeaveRequestController {
         return leaveRequestService.findMine(employeeId, status, pageable);
     }
 
+    @GetMapping("/team/pending")
+    @Operation(summary = "Consulter les demandes en attente de mon équipe",
+            description = "Retourne uniquement les demandes EN_ATTENTE des employés rattachés au manager identifié par X-Employee-Id.")
+    public Page<LeaveRequestResponse> findPendingTeam(
+            @RequestHeader("X-Employee-Id") Long managerId,
+            @PageableDefault(size = 10, sort = "startDate", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        return leaveRequestService.findPendingTeam(managerId, pageable);
+    }
+
     @PatchMapping("/{id}/cancel")
     @Operation(summary = "Annuler une demande de congé",
             description = "Annule une demande appartenant à l'employé identifié par X-Employee-Id, uniquement si elle est EN_ATTENTE.")
