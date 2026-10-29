@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import ma.atlasrh.dto.request.LeaveRequestCreateRequest;
 import ma.atlasrh.dto.request.LeaveRequestDecisionRequest;
+import ma.atlasrh.dto.request.LeaveRequestRejectionRequest;
 import ma.atlasrh.dto.response.LeaveRequestResponse;
 import ma.atlasrh.enums.LeaveRequestStatus;
 import ma.atlasrh.service.LeaveRequestService;
@@ -83,5 +84,15 @@ public class LeaveRequestController {
             @PathVariable Long id,
             @Valid @RequestBody(required = false) LeaveRequestDecisionRequest decisionRequest) {
         return leaveRequestService.approve(managerId, id, decisionRequest);
+    }
+
+    @PatchMapping("/{id}/reject")
+    @Operation(summary = "Refuser une demande de congé",
+            description = "Refuse une demande EN_ATTENTE d'un employé rattaché au manager identifié par X-Employee-Id, avec un commentaire obligatoire.")
+    public LeaveRequestResponse reject(
+            @RequestHeader("X-Employee-Id") Long managerId,
+            @PathVariable Long id,
+            @Valid @RequestBody LeaveRequestRejectionRequest rejectionRequest) {
+        return leaveRequestService.reject(managerId, id, rejectionRequest);
     }
 }
