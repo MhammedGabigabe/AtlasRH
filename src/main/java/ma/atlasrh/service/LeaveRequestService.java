@@ -1,6 +1,7 @@
 package ma.atlasrh.service;
 
 import ma.atlasrh.dto.request.LeaveRequestCreateRequest;
+import ma.atlasrh.dto.request.LeaveRequestDecisionRequest;
 import ma.atlasrh.dto.response.LeaveRequestResponse;
 import ma.atlasrh.entity.Employee;
 import ma.atlasrh.entity.LeaveRequest;
@@ -126,6 +127,32 @@ public class LeaveRequestService {
         }
 
         leaveRequest.setStatus(LeaveRequestStatus.ANNULEE);
+        return leaveRequestMapper.toResponse(leaveRequestRepository.save(leaveRequest));
+    }
+
+    @Transactional
+    public LeaveRequestResponse approve(Long managerId,
+                                        Long leaveRequestId,
+                                        LeaveRequestDecisionRequest decisionRequest) {
+        LeaveRequest leaveRequest = leaveRequestRepository.findById(leaveRequestId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Demande de congé introuvable avec l'id " + leaveRequestId + "."));
+
+        Employee employee = leaveRequest.getEmployee();
+        if (employee.getManager() == null || !employee.getManager().getId().equals(managerId)) {
+            throw new ConflictException("Le manager n'est pas responsable de cet employé.");
+        }
+
+        if (leaveRequest.getStatus() != LeaveRequestStatus.EN_ATTENTE) {
+            throw new ConflictException(
+                    "La demande ne peut être approuvée que lorsqu'elle est en attente.");
+        }
+
+        leaveRequest.setStatus(LeaveRequestStatus.APPROUVEE);
+        if (decisionRequest != null) {
+            leaveRequest.setManagerComment(decisionRequest.managerComment());
+        }
+
         return leaveRequestMapper.toResponse(leaveRequestRepository.save(leaveRequest));
     }
 
