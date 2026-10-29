@@ -2,6 +2,7 @@ package ma.atlasrh.service;
 
 import ma.atlasrh.dto.request.LeaveRequestCreateRequest;
 import ma.atlasrh.dto.request.LeaveRequestDecisionRequest;
+import ma.atlasrh.dto.request.LeaveRequestRejectionRequest;
 import ma.atlasrh.dto.response.LeaveRequestResponse;
 import ma.atlasrh.entity.Employee;
 import ma.atlasrh.entity.LeaveRequest;
@@ -134,6 +135,22 @@ public class LeaveRequestService {
     public LeaveRequestResponse approve(Long managerId,
                                         Long leaveRequestId,
                                         LeaveRequestDecisionRequest decisionRequest) {
+        String comment = decisionRequest == null ? null : decisionRequest.managerComment();
+        return decide(managerId, leaveRequestId, LeaveRequestStatus.APPROUVEE, comment);
+    }
+
+    @Transactional
+    public LeaveRequestResponse reject(Long managerId,
+                                      Long leaveRequestId,
+                                      LeaveRequestRejectionRequest rejectionRequest) {
+        return decide(managerId, leaveRequestId, LeaveRequestStatus.REFUSEE,
+                rejectionRequest.comment());
+    }
+
+    private LeaveRequestResponse decide(Long managerId,
+                                        Long leaveRequestId,
+                                        LeaveRequestStatus decision,
+                                        String comment) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(leaveRequestId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Demande de congé introuvable avec l'id " + leaveRequestId + "."));
@@ -145,13 +162,11 @@ public class LeaveRequestService {
 
         if (leaveRequest.getStatus() != LeaveRequestStatus.EN_ATTENTE) {
             throw new ConflictException(
-                    "La demande ne peut être approuvée que lorsqu'elle est en attente.");
+                    "La demande ne peut faire l'objet d'une nouvelle décision que lorsqu'elle est en attente.");
         }
 
-        leaveRequest.setStatus(LeaveRequestStatus.APPROUVEE);
-        if (decisionRequest != null) {
-            leaveRequest.setManagerComment(decisionRequest.managerComment());
-        }
+        leaveRequest.setStatus(decision);
+        leaveRequest.setManagerComment(comment);
 
         return leaveRequestMapper.toResponse(leaveRequestRepository.save(leaveRequest));
     }
