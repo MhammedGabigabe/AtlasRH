@@ -2,6 +2,7 @@ package ma.atlasrh.service;
 
 import ma.atlasrh.dto.request.EmployeeRequest;
 import ma.atlasrh.dto.response.EmployeeResponse;
+import ma.atlasrh.dto.response.EmployeeSeniorityResponse;
 import ma.atlasrh.entity.Department;
 import ma.atlasrh.entity.Employee;
 import ma.atlasrh.exception.BadRequestException;
@@ -16,6 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.Period;
 
 @Service
 public class EmployeeService {
@@ -99,6 +103,23 @@ public class EmployeeService {
 
         return employeeRepository.findByManagerId(managerId, pageable)
                 .map(employeeMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public EmployeeSeniorityResponse getMySeniority(Long employeeId) {
+        Employee employee = findEmployee(employeeId);
+        LocalDate today = LocalDate.now();
+
+        if (employee.getHireDate().isAfter(today)) {
+            throw new BadRequestException("La date d'embauche ne peut pas être dans le futur.");
+        }
+
+        Period seniority = Period.between(employee.getHireDate(), today);
+        return new EmployeeSeniorityResponse(
+                employee.getHireDate(),
+                seniority.getYears(),
+                seniority.getMonths()
+        );
     }
 
     private Employee findEmployee(Long id) {

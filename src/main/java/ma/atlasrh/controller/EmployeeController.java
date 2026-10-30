@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import ma.atlasrh.dto.request.EmployeeRequest;
 import ma.atlasrh.dto.response.EmployeeResponse;
+import ma.atlasrh.dto.response.EmployeeSeniorityResponse;
 import ma.atlasrh.service.EmployeeService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,6 +64,13 @@ public class EmployeeController {
             @RequestParam(required = false) Long departmentId,
             @PageableDefault(size = 10, sort = "lastName") Pageable pageable) {
         return employeeService.search(search, departmentId, pageable);
+    }
+
+    @GetMapping("/me/seniority")
+    @Operation(summary = "Consulter mon ancienneté")
+    public EmployeeSeniorityResponse getMySeniority(
+            @RequestHeader("X-Employee-Id") Long employeeId) {
+        return employeeService.getMySeniority(employeeId);
     }
 
     @GetMapping("/{id}/team")
